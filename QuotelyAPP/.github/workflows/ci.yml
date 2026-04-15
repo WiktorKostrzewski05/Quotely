@@ -1,0 +1,37 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore QuotelyAPP/QuotelyAPP.csproj
+
+    - name: Build the project
+      run: dotnet build QuotelyAPP/QuotelyAPP.csproj --configuration Release
+
+    - name: Publish Blazor WASM
+      run: dotnet publish QuotelyAPP/QuotelyAPP.csproj -c Release -o output
+
+    - name: Upload artifact for deployment
+      uses: actions/upload-artifact@v4
+      with:
+        name: blazor-build
+        path: output/wwwroot
+

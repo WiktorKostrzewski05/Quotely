@@ -1,0 +1,70 @@
+@page "/favorites"
+@using QuotelyAPP.Models
+@using QuotelyAPP.Services
+@inject FavoritesService FavoritesService
+
+<div class="quote-page">
+    <h2>Favorites</h2>
+    <p class="quote-subtitle">All your favorites in one place</p>
+
+    @if (isLoading)
+    {
+        <p class="loading-text">Loading favorites...</p>
+    }
+    else if (favorites == null || !favorites.Any())
+    {
+        <p class="loading-text">No favorites yet? Start adding quotes you like!</p>
+    }
+    else
+    {
+        <div class="favorites-results">
+            @foreach (var quote in favorites)
+            {
+                <div class="quote-card" style="position:relative; padding-bottom:40px;">
+                    <blockquote>"@quote.content"</blockquote>
+                    <p class="author">— @quote.author</p>
+                    
+                    @if (quote.tags != null && quote.tags.Any())
+                    {
+                        <div class="tags">
+                            @foreach (var tag in quote.tags)
+                            {
+                                <span>@tag</span>
+                            }
+                        </div>
+                    }
+                    
+                    <button class="favorite-btn" style="position:absolute; bottom:15px; right:15px; background:none; border:none; cursor:pointer; padding:5px;" @onclick="() => RemoveFavorite(quote)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#C85A5A" stroke="#C85A5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    List<Quote>? favorites;
+    bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFavorites();
+    }
+
+    private async Task LoadFavorites()
+    {
+        isLoading = true;
+        favorites = await FavoritesService.GetFavoritesAsync();
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task RemoveFavorite(Quote quote)
+    {
+        await FavoritesService.RemoveFavoriteAsync(quote);
+        await LoadFavorites();
+    }
+}

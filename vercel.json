@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 && export PATH=\"$HOME/.dotnet:$PATH\" && dotnet restore QuotelyAPP/QuotelyAPP/QuotelyAPP.csproj",
+  "buildCommand": "export PATH=\"$HOME/.dotnet:$PATH\" && dotnet publish QuotelyAPP/QuotelyAPP/QuotelyAPP.csproj -c Release -o output && rm -rf deploy && mkdir -p deploy/api && cp -r output/wwwroot/. deploy/ && cp -r api/. deploy/api/",
+  "outputDirectory": "deploy",
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}

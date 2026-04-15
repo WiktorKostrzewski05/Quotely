@@ -1,0 +1,41 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: |
+          PROJ=$(find . -name "QuotelyAPP.csproj" -not -path "*/QuotelyAPP.Tests/*" -not -path "*/bin/*" -not -path "*/obj/*" 2>/dev/null | head -1)
+          if [ -z "$PROJ" ]; then
+            for candidate in "QuotelyAPP/QuotelyAPP/QuotelyAPP.csproj" "QuotelyAPP/QuotelyAPP.csproj" "QuotelyAPP.csproj"; do
+              if [ -f "$candidate" ]; then PROJ="$candidate"; break; fi
+            done
+          fi
+          if [ -z "$PROJ" ]; then echo "::error::QuotelyAPP.csproj not found. Repo contents:"; find . -name "*.csproj" -not -path "./.git/*" | head -20; exit 1; fi
+          echo "PROJECT_PATH=$PROJ" >> $GITHUB_ENV
+          dotnet restore "$PROJ"
+
+      - name: Publish Blazor
+        run: |
+          dotnet publish "$PROJECT_PATH" -c Release -o publish --no-restore
+
+      - name: Upload static output
+        uses: actions/upload-artifact@v4
+        with:
+          name: blazor-static
+          path: publish/wwwroot
